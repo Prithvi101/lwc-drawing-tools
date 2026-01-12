@@ -1,6 +1,7 @@
 import { IChartApi, IPrimitivePaneView, ISeriesApi } from "lightweight-charts";
 import { PaneRenderer, RenderLine } from "./pane-renderer";
 import { DrawingTools } from "./drawing-tools";
+import { DrawingPluginOptions } from "./type";
 
 export class PaneView implements IPrimitivePaneView {
   private _renderer: PaneRenderer;
@@ -35,6 +36,10 @@ export class PaneView implements IPrimitivePaneView {
     }
 
     this._renderer.update(renderLines);
+  }
+
+  setOptions(options?: DrawingPluginOptions) {
+    if (options) this._renderer.setOptions(options);
   }
 
   renderer() {

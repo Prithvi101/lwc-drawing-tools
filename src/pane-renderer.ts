@@ -1,4 +1,5 @@
 import { IPrimitivePaneRenderer } from "lightweight-charts";
+import { DrawingPluginOptions } from "./type";
 
 export type RenderLine = {
   x1: number;
@@ -12,6 +13,7 @@ type DrawTarget = Parameters<IPrimitivePaneRenderer["draw"]>[0];
 
 export class PaneRenderer {
   private lines: RenderLine[] = [];
+  private options?: DrawingPluginOptions;
 
   update(lines: RenderLine[]) {
     this.lines = lines;
@@ -26,10 +28,12 @@ export class PaneRenderer {
       for (const l of this.lines) {
         ctx.save();
 
-        ctx.strokeStyle = l.preview ? "rgba(74,222,128,0.5)" : "#4ade80";
+        ctx.strokeStyle = l.preview
+          ? this.options?.previewColor ?? "rgba(74,222,128,0.5)"
+          : this.options?.color ?? "#4ade80";
 
         ctx.setLineDash(l.preview ? [4, 4] : []);
-        ctx.lineWidth = 1 * vRatio;
+        ctx.lineWidth = (this.options?.lineWidth ?? 1) * vRatio;
 
         ctx.beginPath();
         ctx.moveTo(l.x1 * hRatio, l.y1 * vRatio);
@@ -39,5 +43,11 @@ export class PaneRenderer {
         ctx.restore();
       }
     });
+  }
+
+  setOptions(options: DrawingPluginOptions) {
+    this.options = {
+      ...options,
+    };
   }
 }

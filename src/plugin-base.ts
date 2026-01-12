@@ -9,6 +9,7 @@ import {
 import { DrawingTools } from "./drawing-tools";
 import { PaneView } from "./pane-view";
 import { ensureDefined } from "./helpers/assertions";
+import { DrawingPluginOptions } from "./type";
 
 export abstract class PluginBase implements ISeriesPrimitive<Time> {
   private _chart?: IChartApi;
@@ -16,8 +17,9 @@ export abstract class PluginBase implements ISeriesPrimitive<Time> {
   private _requestUpdate?: () => void;
 
   protected tools = new DrawingTools();
-  private pane: PaneView | null = null;
+  protected pane: PaneView | null = null;
   private toolbox?: HTMLDivElement;
+  public options?: DrawingPluginOptions;
 
   protected requestUpdate() {
     this._requestUpdate?.();
@@ -29,10 +31,9 @@ export abstract class PluginBase implements ISeriesPrimitive<Time> {
     this._requestUpdate = requestUpdate;
 
     this.pane = new PaneView(chart, series, this.tools);
-
+    this.pane.setOptions(this.options);
     this.mountToolbox();
     this.bindEvents();
-
     this.requestUpdate();
   }
 

@@ -1,7 +1,14 @@
 import { LineSeries, createChart } from "lightweight-charts";
 import { generateLineData } from "../sample-data";
 import { DrawingPlugin } from "../drawing-plugin";
+import { DrawingPluginOptions } from "../type";
 
+const DEFAULT_OPTIONS: Required<DrawingPluginOptions> = {
+  color: "#206cedff",
+  previewColor: "rgba(130, 126, 250, 0.5)",
+  lineWidth: 2,
+  showEndpoints: true,
+};
 const chart = ((window as unknown as any).chart = createChart("chart", {
   autoSize: true,
 }));
@@ -12,4 +19,4 @@ const lineSeries = chart.addSeries(LineSeries, {
 const data = generateLineData();
 lineSeries.setData(data);
 
-lineSeries.attachPrimitive(new DrawingPlugin());
+lineSeries.attachPrimitive(new DrawingPlugin(DEFAULT_OPTIONS));

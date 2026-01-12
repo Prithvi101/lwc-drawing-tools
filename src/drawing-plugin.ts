@@ -1,5 +1,11 @@
 import { PluginBase } from "./plugin-base";
+import { DrawingPluginOptions } from "./type";
 
 export class DrawingPlugin extends PluginBase {
-  // nothing here yet
+  constructor(options?: DrawingPluginOptions) {
+    super();
+    if (options) {
+      this.options = options;
+    }
+  }
 }
