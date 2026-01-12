@@ -40,6 +40,19 @@ export class PaneRenderer {
         ctx.lineTo(l.x2 * hRatio, l.y2 * vRatio);
         ctx.stroke();
 
+        if (this.options?.showEndpoints) {
+          const endpointRadius = 4 * vRatio;
+          ctx.fillStyle = this.options?.color ?? ctx.strokeStyle;
+          // Start point
+          ctx.beginPath();
+          ctx.arc(l.x1 * hRatio, l.y1 * vRatio, endpointRadius, 0, Math.PI * 2);
+          ctx.fill();
+          // End point
+          ctx.beginPath();
+          ctx.arc(l.x2 * hRatio, l.y2 * vRatio, endpointRadius, 0, Math.PI * 2);
+          ctx.fill();
+        }
+
         ctx.restore();
       }
     });
