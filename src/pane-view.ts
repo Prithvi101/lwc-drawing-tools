@@ -1,8 +1,8 @@
-import { IChartApi, ISeriesApi } from "lightweight-charts";
-import { DrawingTools } from "./drawing-tools";
+import { IChartApi, IPrimitivePaneView, ISeriesApi } from "lightweight-charts";
 import { PaneRenderer, RenderLine } from "./pane-renderer";
+import { DrawingTools } from "./drawing-tools";
 
-export class PaneView {
+export class PaneView implements IPrimitivePaneView {
   private _renderer: PaneRenderer;
 
   constructor(

@@ -1,4 +1,4 @@
-import { BitmapCoordinatesRenderingScope } from "fancy-canvas";
+import { IPrimitivePaneRenderer } from "lightweight-charts";
 
 export type RenderLine = {
   x1: number;
@@ -8,6 +8,8 @@ export type RenderLine = {
   preview?: boolean;
 };
 
+type DrawTarget = Parameters<IPrimitivePaneRenderer["draw"]>[0];
+
 export class PaneRenderer {
   private lines: RenderLine[] = [];
 
@@ -15,7 +17,7 @@ export class PaneRenderer {
     this.lines = lines;
   }
 
-  draw(target: BitmapCoordinatesRenderingScope) {
+  draw(target: DrawTarget) {
     target.useBitmapCoordinateSpace((scope) => {
       const ctx = scope.context;
       const hRatio = scope.horizontalPixelRatio;
