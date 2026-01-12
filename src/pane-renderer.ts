@@ -16,8 +16,6 @@ export class PaneRenderer {
   }
 
   draw(target: BitmapCoordinatesRenderingScope) {
-    console.log("DRAW CALLED");
-
     target.useBitmapCoordinateSpace((scope) => {
       const ctx = scope.context;
       const hRatio = scope.horizontalPixelRatio;

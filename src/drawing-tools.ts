@@ -11,7 +11,6 @@ export interface Line {
 export class DrawingTools {
   private activeTool: ToolType = "none";
   private startPoint: Line["p1"] | null = null;
-
   public lines: Line[] = [];
 
   setTool(tool: ToolType) {
@@ -22,15 +21,10 @@ export class DrawingTools {
 
   onClick(time: Time, price: number) {
     if (this.activeTool !== "trendline") return;
-    console.log("clicked", {
-      p1: this.startPoint,
-      p2: { time, price },
-    });
     if (!this.startPoint) {
       this.startPoint = { time, price };
       return;
     }
-
     this.lines = this.lines.filter((l) => !l.preview);
 
     this.lines.push({
@@ -40,12 +34,9 @@ export class DrawingTools {
 
     this.startPoint = null;
   }
-
   onMove(time: Time, price: number) {
     if (!this.startPoint) return;
-
     this.lines = this.lines.filter((l) => !l.preview);
-
     this.lines.push({
       p1: this.startPoint,
       p2: { time, price },

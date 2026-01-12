@@ -69,11 +69,70 @@ export abstract class PluginBase implements ISeriesPrimitive<Time> {
     el.style.padding = "6px";
     el.style.display = "flex";
     el.style.gap = "6px";
-
     el.innerHTML = `
-      <button data-tool="trendline">📈</button>
-      <button data-tool="none">✖</button>
-    `;
+  <button data-tool="none" class="tool-btn">
+    <!-- Cursor / Crosshair -->
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+      <path d="M12 2V6" stroke="currentColor" stroke-width="2" />
+      <path d="M12 18V22" stroke="currentColor" stroke-width="2" />
+      <path d="M2 12H6" stroke="currentColor" stroke-width="2" />
+      <path d="M18 12H22" stroke="currentColor" stroke-width="2" />
+    </svg>
+  </button>
+
+  <button data-tool="trendline" class="tool-btn">
+    <!-- Trend Line -->
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+      <line
+        x1="4"
+        y1="18"
+        x2="18"
+        y2="6"
+        stroke="currentColor"
+        stroke-width="2"
+        stroke-linecap="round"
+      />
+      <circle cx="4" cy="18" r="2" fill="currentColor" />
+      <circle cx="18" cy="6" r="2" fill="currentColor" />
+    </svg>
+  </button>
+`;
+    el.style.display = "flex";
+    el.style.flexDirection = "column";
+    el.style.gap = "6px";
+    el.style.background = "white";
+    el.style.padding = "6px";
+    el.style.borderRadius = "10px";
+    el.style.boxShadow = "0 6px 20px rgba(0,0,0,0.15)";
+
+    const style = document.createElement("style");
+    style.textContent = `
+  .tool-btn {
+    width: 40px;
+    height: 40px;
+    border: none;
+    background: #ffffff;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    color: #111;
+  }
+
+  .tool-btn:hover {
+    background: #f2f2f2;
+  }
+
+  .tool-btn.active {
+    background: #e5e5e5;
+  }
+
+  .tool-btn svg {
+    pointer-events: none;
+  }
+`;
+    document.head.appendChild(style);
 
     el.onclick = (e) => {
       const btn = (e.target as HTMLElement).closest("button");
@@ -81,6 +140,34 @@ export abstract class PluginBase implements ISeriesPrimitive<Time> {
 
       const tool = btn.dataset.tool as any;
       this.tools.setTool(tool);
+
+      el.querySelectorAll(".tool-btn").forEach((b) =>
+        b.classList.toggle("active", b === btn)
+      );
+
+      this.chart.applyOptions({
+        handleScroll: tool === "none",
+        handleScale: tool === "none",
+      });
+    };
+
+    el.onclick = (e) => {
+      const btn = (e.target as HTMLElement).closest("button");
+      if (!btn) return;
+
+      const tool = btn.dataset.tool as any;
+      this.tools.setTool(tool);
+
+      // Active button UI
+      el.querySelectorAll(".tool-btn").forEach((b) =>
+        b.classList.toggle("active", b === btn)
+      );
+
+      if (tool === "trendline") {
+        this.setCursor("crosshair");
+      } else {
+        this.setCursor("default");
+      }
 
       this.chart.applyOptions({
         handleScroll: tool === "none",
@@ -90,6 +177,17 @@ export abstract class PluginBase implements ISeriesPrimitive<Time> {
 
     container.appendChild(el);
     this.toolbox = el;
+  }
+
+  private setCursor(cursor: string) {
+    const container = this.chart.chartElement();
+
+    // Lightweight Charts renders one or more canvas elements
+    const canvases = container.querySelectorAll("canvas");
+
+    canvases.forEach((c) => {
+      (c as HTMLCanvasElement).style.cursor = cursor;
+    });
   }
 
   private bindEvents() {
