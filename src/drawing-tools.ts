@@ -1,7 +1,7 @@
-import { Time } from "lightweight-charts";
+import { IChartApi, Time } from "lightweight-charts";
 import { nanoid } from "nanoid";
 
-export type ToolType = "none" | "trendline" | "remover";
+export type ToolType = "move" | "trendline" | "remover";
 
 export interface Line {
   id: string;
@@ -11,17 +11,22 @@ export interface Line {
 }
 
 export class DrawingTools {
-  private activeTool: ToolType = "none";
+  private activeTool: ToolType = "move";
   private startPoint: Line["p1"] | null = null;
   public lines: Line[] = [];
 
   setTool(tool: ToolType) {
     this.activeTool = tool;
+    console.log(tool);
     this.startPoint = null;
     this.lines = this.lines.filter((l) => !l.preview);
+
+    document
+      .querySelectorAll(".tool-btn")
+      .forEach((b) => b.classList.toggle("active", b.id === tool + "-button"));
   }
 
-  onClick(time: Time, price: number) {
+  onClick(time: Time, price: number, chart: IChartApi) {
     if (this.activeTool === "remover") {
     }
     if (this.activeTool !== "trendline") return;
@@ -36,8 +41,11 @@ export class DrawingTools {
       p1: this.startPoint,
       p2: { time, price },
     });
-    this.setTool("remover");
-
+    this.setTool("move");
+    chart.applyOptions({
+      handleScroll: true,
+      handleScale: true,
+    });
     this.startPoint = null;
   }
 

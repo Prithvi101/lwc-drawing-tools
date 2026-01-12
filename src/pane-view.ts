@@ -16,13 +16,11 @@ export class PaneView implements IPrimitivePaneView {
     chart.subscribeCrosshairMove((param) => {
       if (!param.point) return;
       this._renderer?.onHover(param.point.x, param.point.y, chart);
-      chart.timeScale().fitContent();
     });
 
     chart.subscribeClick((param) => {
       if (!param.point) return;
       this._renderer?.onClick(param.point.x, param.point.y);
-      chart.timeScale().fitContent();
     });
 
     window.addEventListener("keydown", (e) => {
@@ -30,7 +28,6 @@ export class PaneView implements IPrimitivePaneView {
         e.preventDefault(); // 🔴 REQUIRED
         const selected = this._renderer?.getSelected();
         this.tools.lines = this.tools.lines.filter((l) => l.id !== selected);
-        chart.timeScale().fitContent();
       }
     });
 
@@ -63,8 +60,17 @@ export class PaneView implements IPrimitivePaneView {
 
         // 🔑 Persist absolute position into model
         const drag = this._renderer.getDragState();
-        if (!drag) return;
-
+        if (!drag) {
+          this.chart.applyOptions({
+            handleScroll: true,
+            handleScale: true,
+          });
+          return;
+        }
+        this.chart.applyOptions({
+          handleScroll: false,
+          handleScale: false,
+        });
         const renderLine = this._renderer
           .rendererLines()
           .find((l) => l.id === drag.lineId);

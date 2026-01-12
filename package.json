@@ -1,18 +1,38 @@
 {
   "name": "lwc-plugin-drawing-tools",
+  "version": "0.1.2",
+  "description": "Drawing tools plugin for Lightweight Charts",
   "type": "module",
+  "main": "./dist/lwc-plugin-drawing-tools.js",
+  "types": "./dist/lwc-plugin-drawing-tools.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/lwc-plugin-drawing-tools.d.ts",
+      "import": "./dist/lwc-plugin-drawing-tools.js",
+      "require": "./dist/lwc-plugin-drawing-tools.umd.cjs"
+    }
+  },
+  "files": [
+    "dist"
+  ],
   "scripts": {
     "dev": "vite --config src/vite.config.js",
-    "compile": "tsc && node compile.mjs"
+    "compile": "tsc && node compile.mjs",
+    "prepublishOnly": "yarn compile"
+  },
+  "peerDependencies": {
+    "lightweight-charts": "^5.0.0"
+  },
+  "dependencies": {
+    "fancy-canvas": "^2.1.0",
+    "lightweight-charts": "^5.1.0",
+    "lwc-plugin-drawing-tools": "file:/Users/prithvi/Personal/lwc-drawing-tools-plugin/lwc-plugin-drawing-tools",
+    "nanoid": "^5.1.6"
   },
   "devDependencies": {
+    "dts-bundle-generator": "^8.0.1",
     "typescript": "5.5.4",
     "vite": "7.2.0"
   },
-  "dependencies": {
-    "dts-bundle-generator": "^8.0.1",
-    "fancy-canvas": "^2.1.0",
-    "lightweight-charts": "~5.0.0",
-    "nanoid": "^5.1.6"
-  }
+  "license": "MIT"
 }

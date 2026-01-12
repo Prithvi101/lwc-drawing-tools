@@ -63,16 +63,14 @@ export abstract class PluginBase implements ISeriesPrimitive<Time> {
 
     const el = document.createElement("div");
     el.style.position = "absolute";
-    el.style.top = "10px";
+    el.style.top = "100px";
     el.style.left = "10px";
-    el.style.zIndex = "9999";
-    el.style.background = "rgba(0,0,0,0.7)";
-    el.style.padding = "6px";
-    el.style.display = "flex";
-    el.style.gap = "6px";
+    el.style.zIndex = "9999999";
+
+    el.className = "lwc-toolbox";
+
     el.innerHTML = `
-  <button data-tool="none" class="tool-btn">
-    <!-- Cursor / Crosshair -->
+  <button data-tool="move" class="tool-btn" id="mover-button">
     <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
       <path d="M12 2V6" stroke="currentColor" stroke-width="2" />
       <path d="M12 18V22" stroke="currentColor" stroke-width="2" />
@@ -81,88 +79,84 @@ export abstract class PluginBase implements ISeriesPrimitive<Time> {
     </svg>
   </button>
 
-  <button data-tool="trendline" class="tool-btn">
-    <!-- Trend Line -->
+  <button data-tool="trendline" class="tool-btn" id="trendline-button">
     <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
-      <line
-        x1="4"
-        y1="18"
-        x2="18"
-        y2="6"
-        stroke="currentColor"
-        stroke-width="2"
-        stroke-linecap="round"
-      />
+      <line x1="4" y1="18" x2="18" y2="6"
+        stroke="currentColor" stroke-width="2" stroke-linecap="round" />
       <circle cx="4" cy="18" r="2" fill="currentColor" />
       <circle cx="18" cy="6" r="2" fill="currentColor" />
     </svg>
   </button>
 
-  <button data-tool="remover" class="tool-btn">
-  <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
-    <path
-      d="M3 6H21"
-      stroke="currentColor"
-      stroke-width="2"
-      stroke-linecap="round"
-    />
-    <path
-      d="M8 6V4H16V6"
-      stroke="currentColor"
-      stroke-width="2"
-      stroke-linecap="round"
-    />
-    <path
-      d="M6 6L7 20H17L18 6"
-      stroke="currentColor"
-      stroke-width="2"
-      stroke-linejoin="round"
-    />
-    <path
-      d="M10 11V17M14 11V17"
-      stroke="currentColor"
-      stroke-width="2"
-      stroke-linecap="round"
-    />
-  </svg>
-</button>
-
+  <button data-tool="remover" class="tool-btn" id="remover-button">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+      <path d="M3 6H21" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+      <path d="M8 6V4H16V6" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+      <path d="M6 6L7 20H17L18 6" stroke="currentColor" stroke-width="2" stroke-linejoin="round" />
+      <path d="M10 11V17M14 11V17" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+    </svg>
+  </button>
 `;
-    el.style.display = "flex";
-    el.style.flexDirection = "column";
-    el.style.gap = "6px";
-    el.style.background = "white";
-    el.style.padding = "6px";
-    el.style.borderRadius = "10px";
-    el.style.boxShadow = "0 6px 20px rgba(0,0,0,0.15)";
 
     const style = document.createElement("style");
     style.textContent = `
-  .tool-btn {
-    width: 40px;
-    height: 40px;
-    border: none;
-    background: #ffffff;
-    border-radius: 10px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    color: #111;
-  }
+.lwc-toolbox {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 6px;
 
-  .tool-btn:hover {
-    background: #f2f2f2;
-  }
+  background: #0f1115;
+  border: 1px solid #1e222d;
+  border-radius: 12px;
 
-  .tool-btn.active {
-    background: #e5e5e5;
-  }
+  box-shadow:
+    0 8px 24px rgba(0, 0, 0, 0.6),
+    inset 0 0 0 1px rgba(255,255,255,0.02);
+}
 
-  .tool-btn svg {
-    pointer-events: none;
-  }
+.tool-btn {
+  width: 40px;
+  height: 40px;
+
+  border: 1px solid #1e222d;
+  background: #161a23;
+  border-radius: 10px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  cursor: pointer;
+  color: #cfd3dc;
+
+  transition:
+    background 0.15s ease,
+    border-color 0.15s ease,
+    box-shadow 0.15s ease,
+    color 0.15s ease;
+}
+
+.tool-btn:hover {
+  background: #1f2430;
+  color: #ffffff;
+}
+
+.tool-btn.active {
+  background: #1e2a3a;
+  border-color: #206ced;
+  color: #ffffff;
+
+  box-shadow:
+    0 0 0 1px rgba(32,108,237,0.6),
+    0 4px 12px rgba(32,108,237,0.35);
+}
+
+.tool-btn svg {
+  pointer-events: none;
+}
 `;
+
     document.head.appendChild(style);
 
     el.onclick = (e) => {
@@ -172,13 +166,9 @@ export abstract class PluginBase implements ISeriesPrimitive<Time> {
       const tool = btn.dataset.tool as any;
       this.tools.setTool(tool);
 
-      el.querySelectorAll(".tool-btn").forEach((b) =>
-        b.classList.toggle("active", b === btn)
-      );
-
       this.chart.applyOptions({
-        handleScroll: tool === "none",
-        handleScale: tool === "none",
+        handleScroll: tool === "move",
+        handleScale: tool === "move",
       });
     };
 
@@ -206,8 +196,8 @@ export abstract class PluginBase implements ISeriesPrimitive<Time> {
       }
 
       this.chart.applyOptions({
-        handleScroll: tool === "none",
-        handleScale: tool === "none",
+        handleScroll: tool === "move",
+        handleScale: tool === "move",
       });
     };
 
@@ -233,7 +223,8 @@ export abstract class PluginBase implements ISeriesPrimitive<Time> {
       const price = this.series.coordinateToPrice(param.point.y);
       if (price == null) return;
 
-      this.tools.onClick(param.time, price);
+      this.tools.onClick(param.time, price, this.chart);
+
       this.pane?.update();
       this.requestUpdate();
     });

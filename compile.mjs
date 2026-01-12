@@ -1,116 +1,104 @@
-import { dirname, resolve } from 'node:path';
-import { copyFileSync, existsSync, mkdirSync, writeFileSync } from 'node:fs';
-import { build, defineConfig } from 'vite';
-import { fileURLToPath } from 'url';
-import { generateDtsBundle } from 'dts-bundle-generator';
-
-function buildPackageJson(packageName) {
-	/*
-	 Define the contents of the package's package.json here.
-	 */
-	return {
-		name: packageName,
-		version: '1.0.0',
-		keywords: ['lwc-plugin', 'lightweight-charts'],
-		type: 'module',
-		main: `./${packageName}.umd.cjs`,
-		module: `./${packageName}.js`,
-		types: `./${packageName}.d.ts`,
-		exports: {
-			import: {
-				types: `./${packageName}.d.ts`,
-				default: `./${packageName}.js`,
-			},
-			require: {
-				types: `./${packageName}.d.cts`,
-				default: `./${packageName}.umd.cjs`,
-			},
-		},
-	};
-}
+import { dirname, resolve } from "node:path";
+import { existsSync, mkdirSync, writeFileSync, copyFileSync } from "node:fs";
+import { build, defineConfig } from "vite";
+import { fileURLToPath } from "url";
+import { generateDtsBundle } from "dts-bundle-generator";
 
 const __filename = fileURLToPath(import.meta.url);
 const currentDir = dirname(__filename);
 
-const pluginFileName = 'drawing-tools';
-const pluginFile = resolve(currentDir, 'src', `${pluginFileName}.ts`);
+const PACKAGE_NAME = "lwc-plugin-drawing-tools";
+const ENTRY_FILE = resolve(currentDir, "src/index.ts");
+const DIST_DIR = resolve(currentDir, "dist");
 
-const pluginsToBuild = [
-	{
-		filepath: pluginFile,
-		exportName: 'lwc-plugin-drawing-tools',
-		name: 'DrawingTools',
-	},
-];
-
-const compiledFolder = resolve(currentDir, 'dist');
-if (!existsSync(compiledFolder)) {
-	mkdirSync(compiledFolder);
+// --------------------------------------------------
+// Ensure dist folder exists
+// --------------------------------------------------
+if (!existsSync(DIST_DIR)) {
+  mkdirSync(DIST_DIR);
 }
 
-const buildConfig = ({
-	filepath,
-	name,
-	exportName,
-	formats = ['es', 'umd'],
-}) => {
-	return defineConfig({
-		publicDir: false,
-		build: {
-			outDir: `dist`,
-			emptyOutDir: true,
-			copyPublicDir: false,
-			lib: {
-				entry: filepath,
-				name,
-				formats,
-				fileName: exportName,
-			},
-			rollupOptions: {
-				external: ['lightweight-charts', 'fancy-canvas'],
-				output: {
-					globals: {
-						'lightweight-charts': 'LightweightCharts',
-					},
-				},
-			},
-		},
-	});
-};
+// --------------------------------------------------
+// Vite build config (JS runtime)
+// --------------------------------------------------
+const buildConfig = defineConfig({
+  publicDir: false,
+  build: {
+    outDir: "dist",
+    emptyOutDir: true,
+    copyPublicDir: false,
+    lib: {
+      entry: ENTRY_FILE, // 🔴 SINGLE SOURCE OF TRUTH
+      name: "DrawingPlugin", // UMD global
+      formats: ["es", "umd"],
+      fileName: PACKAGE_NAME,
+    },
+    rollupOptions: {
+      external: ["lightweight-charts", "fancy-canvas"],
+      output: {
+        globals: {
+          "lightweight-charts": "LightweightCharts",
+        },
+      },
+    },
+  },
+});
 
-const startTime = Date.now().valueOf();
-console.log('⚡️ Starting');
-console.log('Bundling the plugin...');
-const promises = pluginsToBuild.map(file => {
-	return build(buildConfig(file));
-});
-await Promise.all(promises);
-console.log('Generating the package.json file...');
-pluginsToBuild.forEach(file => {
-	const packagePath = resolve(compiledFolder, 'package.json');
-	const content = JSON.stringify(
-		buildPackageJson(file.exportName),
-		undefined,
-		4
-	);
-	writeFileSync(packagePath, content, { encoding: 'utf-8' });
-});
-console.log('Generating the typings files...');
-pluginsToBuild.forEach(file => {
-	try {
-		const esModuleTyping = generateDtsBundle([
-			{
-				filePath: `./typings/${pluginFileName}.d.ts`,
-			},
-		]);
-		const typingFilePath = resolve(compiledFolder, `${file.exportName}.d.ts`);
-		writeFileSync(typingFilePath, esModuleTyping.join('\n'), {
-			encoding: 'utf-8',
-		});
-		copyFileSync(typingFilePath, resolve(compiledFolder, `${file.exportName}.d.cts`));
-	} catch (e) {
-		console.error('Error generating typings for: ', file.exportName);
-	}
-});
-const endTime = Date.now().valueOf();
-console.log(`🎉 Done (${endTime - startTime}ms)`);
+// --------------------------------------------------
+// Build package.json for dist
+// --------------------------------------------------
+function buildPackageJson() {
+  return {
+    name: PACKAGE_NAME,
+    version: "1.0.0",
+    keywords: ["lwc-plugin", "lightweight-charts"],
+    type: "module",
+
+    main: `./${PACKAGE_NAME}.umd.cjs`,
+    module: `./${PACKAGE_NAME}.js`,
+    types: `./${PACKAGE_NAME}.d.ts`,
+
+    exports: {
+      ".": {
+        import: `./${PACKAGE_NAME}.js`,
+        require: `./${PACKAGE_NAME}.umd.cjs`,
+        types: `./${PACKAGE_NAME}.d.ts`,
+      },
+    },
+  };
+}
+
+// --------------------------------------------------
+// Build
+// --------------------------------------------------
+console.log("⚡️ Starting");
+console.log("Bundling the plugin...");
+await build(buildConfig);
+
+// --------------------------------------------------
+// Write dist/package.json
+// --------------------------------------------------
+console.log("Generating package.json...");
+writeFileSync(
+  resolve(DIST_DIR, "package.json"),
+  JSON.stringify(buildPackageJson(), null, 2),
+  "utf-8"
+);
+
+// --------------------------------------------------
+// Generate typings (🔥 FIXED 🔥)
+// --------------------------------------------------
+console.log("Generating typings...");
+const typings = generateDtsBundle([
+  {
+    filePath: "./src/index.ts", // 🔴 MUST be index.ts
+  },
+]);
+
+const dtsPath = resolve(DIST_DIR, `${PACKAGE_NAME}.d.ts`);
+writeFileSync(dtsPath, typings.join("\n"), "utf-8");
+
+// CJS typings (for require)
+copyFileSync(dtsPath, resolve(DIST_DIR, `${PACKAGE_NAME}.d.cts`));
+
+console.log("🎉 Done");
