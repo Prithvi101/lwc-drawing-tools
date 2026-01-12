@@ -1,8 +1,10 @@
 import { Time } from "lightweight-charts";
+import { nanoid } from "nanoid";
 
-export type ToolType = "none" | "trendline";
+export type ToolType = "none" | "trendline" | "removeLine";
 
 export interface Line {
+  id: string;
   p1: { time: Time; price: number };
   p2: { time: Time; price: number };
   preview?: boolean;
@@ -28,16 +30,20 @@ export class DrawingTools {
     this.lines = this.lines.filter((l) => !l.preview);
 
     this.lines.push({
+      id: nanoid(),
       p1: this.startPoint,
       p2: { time, price },
     });
+    this.setTool("none");
 
     this.startPoint = null;
   }
+
   onMove(time: Time, price: number) {
     if (!this.startPoint) return;
     this.lines = this.lines.filter((l) => !l.preview);
     this.lines.push({
+      id: "preview",
       p1: this.startPoint,
       p2: { time, price },
       preview: true,
