@@ -97,6 +97,36 @@ export abstract class PluginBase implements ISeriesPrimitive<Time> {
       <circle cx="18" cy="6" r="2" fill="currentColor" />
     </svg>
   </button>
+
+  <button data-tool="remover" class="tool-btn">
+  <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+    <path
+      d="M3 6H21"
+      stroke="currentColor"
+      stroke-width="2"
+      stroke-linecap="round"
+    />
+    <path
+      d="M8 6V4H16V6"
+      stroke="currentColor"
+      stroke-width="2"
+      stroke-linecap="round"
+    />
+    <path
+      d="M6 6L7 20H17L18 6"
+      stroke="currentColor"
+      stroke-width="2"
+      stroke-linejoin="round"
+    />
+    <path
+      d="M10 11V17M14 11V17"
+      stroke="currentColor"
+      stroke-width="2"
+      stroke-linecap="round"
+    />
+  </svg>
+</button>
+
 `;
     el.style.display = "flex";
     el.style.flexDirection = "column";
@@ -164,10 +194,15 @@ export abstract class PluginBase implements ISeriesPrimitive<Time> {
         b.classList.toggle("active", b === btn)
       );
 
-      if (tool === "trendline") {
-        this.setCursor("crosshair");
-      } else {
-        this.setCursor("default");
+      switch (tool) {
+        case "trendline":
+          this.setCursor("crosshair");
+          break;
+        case "remover":
+          this.setCursor("pointer");
+          break;
+        default:
+          break;
       }
 
       this.chart.applyOptions({

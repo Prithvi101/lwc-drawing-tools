@@ -4,8 +4,7 @@ import { DrawingPlugin } from "../drawing-plugin";
 import { DrawingPluginOptions } from "../type";
 
 const DEFAULT_OPTIONS: Required<DrawingPluginOptions> = {
-  color: "#206cedff",
-  previewColor: "rgba(130, 126, 250, 0.5)",
+  color: "rgba(32, 108, 237, 1)",
   lineWidth: 2,
   showEndpoints: true,
 };

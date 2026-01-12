@@ -1,7 +1,7 @@
 import { Time } from "lightweight-charts";
 import { nanoid } from "nanoid";
 
-export type ToolType = "none" | "trendline" | "removeLine";
+export type ToolType = "none" | "trendline" | "remover";
 
 export interface Line {
   id: string;
@@ -22,6 +22,8 @@ export class DrawingTools {
   }
 
   onClick(time: Time, price: number) {
+    if (this.activeTool === "remover") {
+    }
     if (this.activeTool !== "trendline") return;
     if (!this.startPoint) {
       this.startPoint = { time, price };
@@ -34,7 +36,7 @@ export class DrawingTools {
       p1: this.startPoint,
       p2: { time, price },
     });
-    this.setTool("none");
+    this.setTool("remover");
 
     this.startPoint = null;
   }

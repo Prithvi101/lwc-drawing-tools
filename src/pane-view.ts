@@ -26,8 +26,10 @@ export class PaneView implements IPrimitivePaneView {
     });
 
     window.addEventListener("keydown", (e) => {
-      if (e.key === "Delete") {
-        this._renderer?.deleteSelected();
+      if (e.key === "Backspace" || e.key === "Delete") {
+        e.preventDefault(); // 🔴 REQUIRED
+        const selected = this._renderer?.getSelected();
+        this.tools.lines = this.tools.lines.filter((l) => l.id !== selected);
         chart.timeScale().fitContent();
       }
     });

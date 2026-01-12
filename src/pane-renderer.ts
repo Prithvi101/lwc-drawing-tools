@@ -1,5 +1,6 @@
 import { IChartApi, IPrimitivePaneRenderer } from "lightweight-charts";
 import { DrawingPluginOptions } from "./type";
+import { brighten, withAlpha } from "./helpers/colors";
 
 export type RenderLine = {
   id: string;
@@ -49,11 +50,19 @@ export class PaneRenderer {
 
         ctx.save();
 
+        const baseColor = this.options?.color ?? "rgba(32,108,237,1)";
+
+        const colors = {
+          normal: baseColor,
+          hovered: withAlpha(baseColor, 0.6),
+          selected: brighten(baseColor, 40),
+        };
+
         ctx.strokeStyle = isSelected
-          ? "#22c55e"
+          ? colors.selected
           : isHovered
-          ? "#86efac"
-          : this.options?.color ?? "#4ade80";
+          ? colors.hovered
+          : colors.normal;
 
         ctx.lineWidth =
           ((this.options?.lineWidth ?? 1) + (isHovered || isSelected ? 1 : 0)) *
@@ -70,12 +79,12 @@ export class PaneRenderer {
         if (isHovered || isSelected) {
           const r = 4 * v;
           const drawEdge = (x: number, y: number) => {
-            ctx.fillStyle = "#22c55e";
+            ctx.fillStyle = colors.normal;
             ctx.beginPath();
             ctx.arc(x * h, y * v, r, 0, Math.PI * 2);
             ctx.fill();
 
-            ctx.strokeStyle = "#ffffff";
+            ctx.strokeStyle = colors.normal;
             ctx.lineWidth = 1 * v;
             ctx.stroke();
           };
@@ -232,10 +241,8 @@ export class PaneRenderer {
     this.selectedLineId = line?.id ?? null;
   }
 
-  deleteSelected() {
-    if (!this.selectedLineId) return;
-    this.lines = this.lines.filter((l) => l.id !== this.selectedLineId);
-    this.selectedLineId = null;
+  getSelected() {
+    return this.selectedLineId;
   }
 
   setOptions(options: DrawingPluginOptions) {
