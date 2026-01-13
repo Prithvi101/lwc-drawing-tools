@@ -6,6 +6,8 @@ import { DrawingPluginOptions } from "./type";
 export class PaneView implements IPrimitivePaneView {
   private _renderer: PaneRenderer;
 
+  private isDragging = false;
+
   constructor(
     private chart: IChartApi,
     private series: ISeriesApi<any>,
@@ -13,98 +15,114 @@ export class PaneView implements IPrimitivePaneView {
   ) {
     this._renderer = new PaneRenderer();
 
-    chart.subscribeCrosshairMove((param) => {
+    this.initializeHandlers();
+  }
+
+  private initializeHandlers() {
+    this.chart.subscribeCrosshairMove((param) => {
       if (!param.point) return;
-      this._renderer?.onHover(param.point.x, param.point.y, chart);
+      this._renderer?.onHover(param.point.x, param.point.y, this.chart);
     });
 
-    chart.subscribeClick((param) => {
+    this.chart.subscribeClick((param) => {
       if (!param.point) return;
-      this._renderer?.onClick(param.point.x, param.point.y);
+      this.handleClick(param.point.x, param.point.y);
     });
 
-    window.addEventListener("keydown", (e) => {
-      if (e.key === "Backspace" || e.key === "Delete") {
-        e.preventDefault(); // 🔴 REQUIRED
-        const selected = this._renderer?.getSelected();
-        this.tools.lines = this.tools.lines.filter((l) => l.id !== selected);
-      }
-    });
+    window.addEventListener("keydown", this.handleKeyDown.bind(this));
 
     const container = this.chart.chartElement();
-    let isDragging = false;
+    container.addEventListener("mousedown", this.handlePointerDown.bind(this));
+    container.addEventListener("mousemove", this.handlePointerMove.bind(this));
+    window.addEventListener("mouseup", this.handlePointerUp.bind(this));
+  }
 
-    /* ======================
-   POINTER DOWN
-   ====================== */
-    container.addEventListener("mousedown", (e) => {
-      const rect = container.getBoundingClientRect();
-      const x = e.clientX - rect.left;
-      const y = e.clientY - rect.top;
-
-      isDragging = true;
-      this._renderer.onPointerDown(x, y);
-    });
-
-    /* ======================
-   POINTER MOVE
-   ====================== */
-    container.addEventListener("mousemove", (e) => {
-      const rect = container.getBoundingClientRect();
-      const x = e.clientX - rect.left;
-      const y = e.clientY - rect.top;
-
-      if (isDragging) {
-        // 🔑 Preview follows cursor
-        this._renderer.onPointerMove(x, y);
-
-        // 🔑 Persist absolute position into model
-        const drag = this._renderer.getDragState();
-        if (!drag) {
-          this.chart.applyOptions({
-            handleScroll: true,
-            handleScale: true,
-          });
-          return;
-        }
-        this.chart.applyOptions({
-          handleScroll: false,
-          handleScale: false,
-        });
-        const renderLine = this._renderer
-          .rendererLines()
-          .find((l) => l.id === drag.lineId);
-        if (!renderLine) return;
-
-        const timeScale = this.chart.timeScale();
-
-        const t1 = timeScale.coordinateToTime(renderLine.x1);
-        const t2 = timeScale.coordinateToTime(renderLine.x2);
-        const p1 = this.series.coordinateToPrice(renderLine.y1);
-        const p2 = this.series.coordinateToPrice(renderLine.y2);
-
-        if (t1 == null || t2 == null || p1 == null || p2 == null) return;
-
-        const modelLine = this.tools.lines.find((l) => l.id === drag.lineId);
-        if (!modelLine) return;
-
-        modelLine.p1.time = t1;
-        modelLine.p1.price = p1;
-        modelLine.p2.time = t2;
-        modelLine.p2.price = p2;
-      } else {
-        this._renderer.onHover(x, y, this.chart);
+  private handleClick(x: number, y: number) {
+    if (this.tools.tool === "remover") {
+      const line = this._renderer.findLineAt(x, y);
+      if (line) {
+        this.tools.removeLine(line.id);
+        this._renderer.onHover(x, y, this.chart); // re-check hover to clear cursor if needed
       }
-    });
+      return;
+    }
+    this._renderer?.onClick(x, y);
+  }
 
-    /* ======================
-   POINTER UP
-   ====================== */
-    window.addEventListener("mouseup", () => {
-      if (!isDragging) return;
-      isDragging = false;
-      this._renderer.onPointerUp();
+  private handleKeyDown(e: KeyboardEvent) {
+    if (e.key === "Backspace" || e.key === "Delete") {
+      e.preventDefault();
+      const selected = this._renderer?.getSelected();
+      if (selected) {
+        this.tools.removeLine(selected);
+      }
+    }
+  }
+
+  private handlePointerDown(e: MouseEvent) {
+    const container = this.chart.chartElement();
+    const rect = container.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+
+    this.isDragging = true;
+    this._renderer.onPointerDown(x, y);
+  }
+
+  private handlePointerMove(e: MouseEvent) {
+    const container = this.chart.chartElement();
+    const rect = container.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+
+    if (this.isDragging) {
+      this._renderer.onPointerMove(x, y);
+      this.syncDragState();
+    } else {
+      this._renderer.onHover(x, y, this.chart);
+    }
+  }
+
+  private handlePointerUp() {
+    if (!this.isDragging) return;
+    this.isDragging = false;
+    this._renderer.onPointerUp();
+  }
+
+  private syncDragState() {
+    const drag = this._renderer.getDragState();
+    if (!drag) {
+      this.chart.applyOptions({
+        handleScroll: true,
+        handleScale: true,
+      });
+      return;
+    }
+    this.chart.applyOptions({
+      handleScroll: false,
+      handleScale: false,
     });
+    const renderLine = this._renderer
+      .rendererLines()
+      .find((l) => l.id === drag.lineId);
+    if (!renderLine) return;
+
+    const timeScale = this.chart.timeScale();
+
+    const t1 = timeScale.coordinateToTime(renderLine.x1);
+    const t2 = timeScale.coordinateToTime(renderLine.x2);
+    const p1 = this.series.coordinateToPrice(renderLine.y1);
+    const p2 = this.series.coordinateToPrice(renderLine.y2);
+
+    if (t1 == null || t2 == null || p1 == null || p2 == null) return;
+
+    const modelLine = this.tools.lines.find((l) => l.id === drag.lineId);
+    if (!modelLine) return;
+
+    modelLine.p1.time = t1;
+    modelLine.p1.price = p1;
+    modelLine.p2.time = t2;
+    modelLine.p2.price = p2;
   }
 
   update() {

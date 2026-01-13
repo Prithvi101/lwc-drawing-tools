@@ -15,6 +15,10 @@ export class DrawingTools {
   private startPoint: Line["p1"] | null = null;
   public lines: Line[] = [];
 
+  get tool() {
+    return this.activeTool;
+  }
+
   setTool(tool: ToolType) {
     this.activeTool = tool;
     console.log(tool);
@@ -27,8 +31,6 @@ export class DrawingTools {
   }
 
   onClick(time: Time, price: number, chart: IChartApi) {
-    if (this.activeTool === "remover") {
-    }
     if (this.activeTool !== "trendline") return;
     if (!this.startPoint) {
       this.startPoint = { time, price };
@@ -58,5 +60,9 @@ export class DrawingTools {
       p2: { time, price },
       preview: true,
     });
+  }
+
+  removeLine(id: string) {
+    this.lines = this.lines.filter((l) => l.id !== id);
   }
 }
