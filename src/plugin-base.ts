@@ -103,7 +103,7 @@ export abstract class PluginBase implements ISeriesPrimitive<Time> {
   gap: 6px;
   padding: 6px;
 
-  background: #0f1115;
+  background: #020817;
   border: 1px solid #1e222d;
   border-radius: 12px;
 
