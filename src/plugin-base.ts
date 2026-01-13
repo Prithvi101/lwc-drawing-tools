@@ -63,19 +63,16 @@ export abstract class PluginBase implements ISeriesPrimitive<Time> {
 
     const el = document.createElement("div");
     el.style.position = "absolute";
-    el.style.top = "100px";
-    el.style.left = "10px";
+    el.style.top = `${this.options?.toolBoxOffset?.y ?? 100}px`;
+    el.style.left = `${this.options?.toolBoxOffset?.x ?? 10}px`;
     el.style.zIndex = "9999999";
 
     el.className = "lwc-toolbox";
 
     el.innerHTML = `
-  <button data-tool="move" class="tool-btn" id="mover-button">
-    <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
-      <path d="M12 2V6" stroke="currentColor" stroke-width="2" />
-      <path d="M12 18V22" stroke="currentColor" stroke-width="2" />
-      <path d="M2 12H6" stroke="currentColor" stroke-width="2" />
-      <path d="M18 12H22" stroke="currentColor" stroke-width="2" />
+  <button data-tool="move" class="tool-btn" id="move-button">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M3 3l7.07 16.97 2.51-7.39 7.39-2.51L3 3z" />
     </svg>
   </button>
 
