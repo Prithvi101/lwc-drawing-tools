@@ -50,13 +50,13 @@ export class PaneView implements IPrimitivePaneView {
   }
 
   private handleKeyDown(e: KeyboardEvent) {
-    if (e.key === "Backspace" || e.key === "Delete") {
-      e.preventDefault();
-      const selected = this._renderer?.getSelected();
-      if (selected) {
-        this.tools.removeLine(selected);
-      }
-    }
+    // if (e.key === "Backspace" || e.key === "Delete") {
+    //   e.preventDefault();
+    //   const selected = this._renderer?.getSelected();
+    //   if (selected) {
+    //     this.tools.removeLine(selected);
+    //   }
+    // }
   }
 
   private handlePointerDown(e: MouseEvent) {
