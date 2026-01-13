@@ -71,13 +71,13 @@ export abstract class PluginBase implements ISeriesPrimitive<Time> {
 
     el.innerHTML = `
   <button data-tool="move" class="tool-btn" id="move-button">
-    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="#2252cc" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
       <path d="M3 3l7.07 16.97 2.51-7.39 7.39-2.51L3 3z" />
     </svg>
   </button>
 
   <button data-tool="trendline" class="tool-btn" id="trendline-button">
-    <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="#2252cc">
       <line x1="4" y1="18" x2="18" y2="6"
         stroke="currentColor" stroke-width="2" stroke-linecap="round" />
       <circle cx="4" cy="18" r="2" fill="currentColor" />
@@ -86,7 +86,7 @@ export abstract class PluginBase implements ISeriesPrimitive<Time> {
   </button>
 
   <button data-tool="remover" class="tool-btn" id="remover-button">
-    <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="#2252cc">
       <path d="M3 6H21" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
       <path d="M8 6V4H16V6" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
       <path d="M6 6L7 20H17L18 6" stroke="currentColor" stroke-width="2" stroke-linejoin="round" />
@@ -117,7 +117,7 @@ export abstract class PluginBase implements ISeriesPrimitive<Time> {
   height: 40px;
 
   border: 1px solid #1e222d;
-  background: #161a23;
+  background: #2252cc;
   border-radius: 10px;
 
   display: flex;
@@ -141,7 +141,7 @@ export abstract class PluginBase implements ISeriesPrimitive<Time> {
 
 .tool-btn.active {
   background: #1e2a3a;
-  border-color: #206ced;
+  border-color: #2252cc;
   color: #ffffff;
 
   box-shadow:
