@@ -29,8 +29,6 @@ export class PaneView implements IPrimitivePaneView {
       this.handleClick(param.point.x, param.point.y);
     });
 
-    window.addEventListener("keydown", this.handleKeyDown.bind(this));
-
     const container = this.chart.chartElement();
     container.addEventListener("mousedown", this.handlePointerDown.bind(this));
     container.addEventListener("mousemove", this.handlePointerMove.bind(this));
@@ -47,16 +45,6 @@ export class PaneView implements IPrimitivePaneView {
       return;
     }
     this._renderer?.onClick(x, y);
-  }
-
-  private handleKeyDown(e: KeyboardEvent) {
-    // if (e.key === "Backspace" || e.key === "Delete") {
-    //   e.preventDefault();
-    //   const selected = this._renderer?.getSelected();
-    //   if (selected) {
-    //     this.tools.removeLine(selected);
-    //   }
-    // }
   }
 
   private handlePointerDown(e: MouseEvent) {

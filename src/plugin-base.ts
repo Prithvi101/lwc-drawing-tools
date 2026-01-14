@@ -38,6 +38,7 @@ export abstract class PluginBase implements ISeriesPrimitive<Time> {
   }
 
   detached() {
+    this.unBindEvents();
     this.toolbox?.remove();
     this.toolbox = undefined;
     this.pane = null;
@@ -107,9 +108,7 @@ export abstract class PluginBase implements ISeriesPrimitive<Time> {
   border: 1px solid #1e222d;
   border-radius: 12px;
 
-  box-shadow:
-    0 8px 24px rgba(0, 0, 0, 0.6),
-    inset 0 0 0 1px rgba(255,255,255,0.02);
+
 }
 
 .tool-btn {
@@ -214,27 +213,34 @@ export abstract class PluginBase implements ISeriesPrimitive<Time> {
   }
 
   private bindEvents() {
-    this.chart.subscribeClick((param) => {
-      if (!param.time || !param.point) return;
+    this.chart.subscribeClick(this.handleClick);
+    this.chart.subscribeCrosshairMove(this.handleCrosshairMove);
+  }
 
-      const price = this.series.coordinateToPrice(param.point.y);
-      if (price == null) return;
+  private handleClick = (param: any) => {
+    if (!param.time || !param.point) return;
 
-      this.tools.onClick(param.time, price, this.chart);
+    const price = this.series.coordinateToPrice(param.point.y);
+    if (price == null) return;
 
-      this.pane?.update();
-      this.requestUpdate();
-    });
+    this.tools.onClick(param.time, price, this.chart);
+    this.pane?.update();
+    this.requestUpdate();
+  };
 
-    this.chart.subscribeCrosshairMove((param) => {
-      if (!param.time || !param.point) return;
+  private handleCrosshairMove = (param: any) => {
+    if (!param.time || !param.point) return;
 
-      const price = this.series.coordinateToPrice(param.point.y);
-      if (price == null) return;
+    const price = this.series.coordinateToPrice(param.point.y);
+    if (price == null) return;
 
-      this.tools.onMove(param.time, price);
-      this.pane?.update();
-      this.requestUpdate();
-    });
+    this.tools.onMove(param.time, price);
+    this.pane?.update();
+    this.requestUpdate();
+  };
+
+  private unBindEvents() {
+    this.chart.unsubscribeClick(this.handleClick);
+    this.chart.unsubscribeCrosshairMove(this.handleCrosshairMove);
   }
 }

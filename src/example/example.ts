@@ -18,5 +18,16 @@ const lineSeries = chart.addSeries(LineSeries, {
 });
 const data = generateLineData();
 lineSeries.setData(data);
-
-lineSeries.attachPrimitive(new DrawingPlugin(DEFAULT_OPTIONS));
+const drawingTools = new DrawingPlugin(DEFAULT_OPTIONS);
+lineSeries.attachPrimitive(drawingTools);
+let attatched = true;
+const toggle = document.getElementById("toggle") as HTMLButtonElement;
+toggle.addEventListener("click", () => {
+  if (attatched) {
+    lineSeries.detachPrimitive(drawingTools);
+    attatched = false;
+    return;
+  }
+  lineSeries.attachPrimitive(drawingTools);
+  attatched = true;
+});
