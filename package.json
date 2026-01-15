@@ -18,19 +18,22 @@
   "scripts": {
     "dev": "vite --config src/vite.config.js",
     "compile": "tsc && node compile.mjs",
-    "prepublishOnly": "yarn compile"
+    "prepublishOnly": "yarn compile",
+    "build:demo": "vite build --config src/vite.config.js --base=/lwc-drawing-tools/ --outDir dist-demo",
+    "deploy": "npm run build:demo && gh-pages -d dist-demo"
   },
   "peerDependencies": {
     "lightweight-charts": "^5.0.0"
   },
   "dependencies": {
     "fancy-canvas": "^2.1.0",
-    "lightweight-charts": "^5.1.0",
+    "lightweight-charts": "^5.0.0",
     "lwc-plugin-drawing-tools": "file:/Users/prithvi/Personal/lwc-drawing-tools-plugin/lwc-plugin-drawing-tools",
     "nanoid": "^5.1.6"
   },
   "devDependencies": {
     "dts-bundle-generator": "^8.0.1",
+    "gh-pages": "^6.3.0",
     "typescript": "5.5.4",
     "vite": "7.2.0"
   },
