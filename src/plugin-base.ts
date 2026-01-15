@@ -34,6 +34,7 @@ export abstract class PluginBase implements ISeriesPrimitive<Time> {
     this.pane.setOptions(this.options);
     this.mountToolbox();
     this.bindEvents();
+    this.pane?.update();
     this.requestUpdate();
   }
 
