@@ -3,7 +3,7 @@
 Description of the Plugin.
 
 - Developed for Lightweight Charts version: `v5.0.0`
-- Demo: [View Demo](https://prithvi101.github.io/lwc-drawing-tools/) (if applicable, otherwise omit or keep simple)
+- Demo: [View Demo](https://prithvi101.github.io/lwc-drawing-tools/dist-demo/src/example/) (if applicable, otherwise omit or keep simple)
 
 ## Features & Usage
 
