@@ -9,7 +9,12 @@ const DEFAULT_OPTIONS: Required<DrawingPluginOptions> = {
   showEndpoints: true,
   toolBoxOffset: { x: 0, y: 10 },
 };
-const chart = ((window as unknown as any).chart = createChart("chart", {
+const chartContainer = document.getElementById("chart");
+if (!chartContainer) {
+  throw new Error("Chart container not found");
+}
+
+const chart = ((window as unknown as any).chart = createChart(chartContainer, {
   autoSize: true,
 }));
 
