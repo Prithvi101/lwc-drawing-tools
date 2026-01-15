@@ -71,13 +71,13 @@ export abstract class PluginBase implements ISeriesPrimitive<Time> {
     el.className = "lwc-toolbox";
 
     el.innerHTML = `
-  <button data-tool="move" class="tool-btn" id="move-button">
+  <button data-tool="move" class="tool-btn" id="move-button" title="Move">
     <svg width="20" height="20" viewBox="0 0 24 24" fill="#2252cc" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
       <path d="M3 3l7.07 16.97 2.51-7.39 7.39-2.51L3 3z" />
     </svg>
   </button>
 
-  <button data-tool="trendline" class="tool-btn" id="trendline-button">
+  <button data-tool="trendline" class="tool-btn" id="trendline-button" title="Trendline">
     <svg width="20" height="20" viewBox="0 0 24 24" fill="#2252cc">
       <line x1="4" y1="18" x2="18" y2="6"
         stroke="currentColor" stroke-width="2" stroke-linecap="round" />
@@ -86,7 +86,7 @@ export abstract class PluginBase implements ISeriesPrimitive<Time> {
     </svg>
   </button>
 
-  <button data-tool="fibonacci" class="tool-btn" id="fibonacci-button">
+  <button data-tool="fibonacci" class="tool-btn" id="fibonacci-button" title="Fibonacci Retracement">
     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
       <line x1="1" y1="20" x2="23" y2="20" />
       <line x1="1" y1="14" x2="23" y2="14" />
@@ -95,11 +95,11 @@ export abstract class PluginBase implements ISeriesPrimitive<Time> {
     </svg>
   </button>
 
-  <button data-tool="pen" class="tool-btn" id="pen-button">
+  <button data-tool="pen" class="tool-btn" id="pen-button" title="Pen Tool">
      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19l7-7 3 3-7 7-3-3z"></path><path d="M18 13l-1.5-7.5L2 2l3.5 14.5L13 18l5-5z"></path><path d="M2 2l7.586 7.586"></path><circle cx="11" cy="11" r="2"></circle></svg>
   </button>
 
-  <button data-tool="remover" class="tool-btn" id="remover-button">
+  <button data-tool="remover" class="tool-btn" id="remover-button" title="Eraser">
     <svg width="20" height="20" viewBox="0 0 24 24" fill="#2252cc">
       <path d="M3 6H21" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
       <path d="M8 6V4H16V6" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
