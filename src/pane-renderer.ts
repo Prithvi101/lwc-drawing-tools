@@ -13,6 +13,7 @@ export type RenderLine = {
   color?: string;
   label?: string;
   textColor?: string;
+  points?: { x: number; y: number }[];
 };
 
 type DrawTarget = Parameters<IPrimitivePaneRenderer["draw"]>[0];
@@ -25,13 +26,15 @@ export class PaneRenderer {
   private selectedLineId: string | null = null;
   private dragState: {
     lineId: string;
-    type: "line" | "start" | "end";
-    grabOffset: {
+    type: "line" | "start" | "end" | "poly";
+    grabOffset?: {
       x1: number;
       y1: number;
       x2: number;
       y2: number;
     };
+    pointsSnapshot?: { x: number; y: number }[];
+    dragOrigin?: { x: number; y: number };
   } | null = null;
 
   private hitEndpoint(px: number, py: number, cx: number, cy: number, r = 6) {
@@ -80,12 +83,48 @@ export class PaneRenderer {
         ctx.setLineDash(l.preview ? [4, 4] : []);
 
         ctx.beginPath();
-        ctx.moveTo(l.x1 * h, l.y1 * v);
-        ctx.lineTo(l.x2 * h, l.y2 * v);
+
+        if (l.points && l.points.length > 0) {
+          const points = l.points;
+          ctx.moveTo(points[0].x * h, points[0].y * v);
+
+          // Smooth curve using quadratic Bézier
+          let i = 1;
+          for (; i < points.length - 2; i++) {
+            const xc = (points[i].x + points[i + 1].x) / 2;
+            const yc = (points[i].y + points[i + 1].y) / 2;
+            ctx.quadraticCurveTo(
+              points[i].x * h,
+              points[i].y * v,
+              xc * h,
+              yc * v
+            );
+          }
+
+          // Curve through the last two points
+          if (i < points.length - 1) {
+            ctx.quadraticCurveTo(
+              points[i].x * h,
+              points[i].y * v,
+              points[i + 1].x * h,
+              points[i + 1].y * v
+            );
+          } else if (points.length > 1) {
+            // Fallback for very short lines (2 points) where look didn't run
+            ctx.lineTo(
+              points[points.length - 1].x * h,
+              points[points.length - 1].y * v
+            );
+          }
+        } else {
+          ctx.moveTo(l.x1 * h, l.y1 * v);
+          ctx.lineTo(l.x2 * h, l.y2 * v);
+        }
+
         ctx.stroke();
 
-        // 🔑 edges only on hover or selection
-        if ((isHovered || isSelected) && l.interaction !== false) {
+        // 🔑 edges only on hover or selection (skip for polyline for now to keep it clean)
+        if ((isHovered || isSelected) && l.interaction !== false && !l.points) {
           const r = 4 * v;
           const drawEdge = (x: number, y: number) => {
             ctx.fillStyle = colors.normal;
@@ -144,8 +183,20 @@ export class PaneRenderer {
     for (let i = this.lines.length - 1; i >= 0; i--) {
       const l = this.lines[i];
       if (l.interaction === false) continue; // skip non-interactive lines
-      if (this.distanceToLine(x, y, l.x1, l.y1, l.x2, l.y2) <= tolerance) {
-        return l;
+
+      if (l.points && l.points.length > 0) {
+        // Check polyline segments
+        for (let j = 0; j < l.points.length - 1; j++) {
+          const p1 = l.points[j];
+          const p2 = l.points[j + 1];
+          if (this.distanceToLine(x, y, p1.x, p1.y, p2.x, p2.y) <= tolerance) {
+            return l;
+          }
+        }
+      } else {
+        if (this.distanceToLine(x, y, l.x1, l.y1, l.x2, l.y2) <= tolerance) {
+          return l;
+        }
       }
     }
     return null;
@@ -174,6 +225,17 @@ export class PaneRenderer {
     if (!line) return;
 
     this.selectedLineId = line.id;
+
+    // Handle Polyline Drag
+    if (line.points) {
+      this.dragState = {
+        lineId: line.id,
+        type: "poly",
+        pointsSnapshot: line.points.map((p) => ({ ...p })),
+        dragOrigin: { x, y },
+      };
+      return;
+    }
 
     // endpoint first
     if (this.hitEndpoint(x, y, line.x1, line.y1)) {
@@ -223,7 +285,22 @@ export class PaneRenderer {
     const line = this.lines.find((l) => l.id === this.dragState!.lineId);
     if (!line) return;
 
-    const o = this.dragState.grabOffset;
+    if (
+      this.dragState.type === "poly" &&
+      this.dragState.pointsSnapshot &&
+      this.dragState.dragOrigin
+    ) {
+      const dx = x - this.dragState.dragOrigin.x;
+      const dy = y - this.dragState.dragOrigin.y;
+
+      line.points = this.dragState.pointsSnapshot.map((p) => ({
+        x: p.x + dx,
+        y: p.y + dy,
+      }));
+      return;
+    }
+
+    const o = this.dragState.grabOffset!;
 
     if (this.dragState.type === "line") {
       line.x1 = x + o.x1;

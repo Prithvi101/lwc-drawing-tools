@@ -1,4 +1,9 @@
-import { IChartApi, IPrimitivePaneView, ISeriesApi } from "lightweight-charts";
+import {
+  IChartApi,
+  IPrimitivePaneView,
+  ISeriesApi,
+  Logical,
+} from "lightweight-charts";
 import { PaneRenderer, RenderLine } from "./pane-renderer";
 import { DrawingTools } from "./drawing-tools";
 import { DrawingPluginOptions } from "./type";
@@ -53,6 +58,19 @@ export class PaneView implements IPrimitivePaneView {
     const x = e.clientX - rect.left;
     const y = e.clientY - rect.top;
 
+    if (this.tools.tool === "pen") {
+      const timeScale = this.chart.timeScale();
+      const time = timeScale.coordinateToTime(x);
+      const logical = timeScale.coordinateToLogical(x);
+      const price = this.series.coordinateToPrice(y);
+      if (time && price && logical !== null) {
+        this.tools.startDrawing(time, price, logical);
+        this.update(); // Trigger re-render to show start
+        e.preventDefault(); // Stop chart scroll
+      }
+      return;
+    }
+
     this.isDragging = true;
     this._renderer.onPointerDown(x, y);
   }
@@ -63,6 +81,18 @@ export class PaneView implements IPrimitivePaneView {
     const x = e.clientX - rect.left;
     const y = e.clientY - rect.top;
 
+    if (this.tools.tool === "pen") {
+      const timeScale = this.chart.timeScale();
+      const time = timeScale.coordinateToTime(x);
+      const logical = timeScale.coordinateToLogical(x);
+      const price = this.series.coordinateToPrice(y);
+      if (time && price && logical !== null) {
+        this.tools.continueDrawing(time, price, logical);
+        this.update();
+      }
+      return;
+    }
+
     if (this.isDragging) {
       this._renderer.onPointerMove(x, y);
       this.syncDragState();
@@ -72,6 +102,11 @@ export class PaneView implements IPrimitivePaneView {
   }
 
   private handlePointerUp() {
+    if (this.tools.tool === "pen") {
+      this.tools.endDrawing();
+      return;
+    }
+
     if (!this.isDragging) return;
     this.isDragging = false;
     this._renderer.onPointerUp();
@@ -97,15 +132,36 @@ export class PaneView implements IPrimitivePaneView {
 
     const timeScale = this.chart.timeScale();
 
+    const modelLine = this.tools.lines.find((l) => l.id === drag.lineId);
+    if (!modelLine) return;
+
+    // Handle Polyline Sync
+    if (renderLine.points && modelLine.points) {
+      for (let i = 0; i < renderLine.points.length; i++) {
+        if (i >= modelLine.points.length) break;
+
+        const rp = renderLine.points[i];
+        const logical = timeScale.coordinateToLogical(rp.x);
+        const price = this.series.coordinateToPrice(rp.y);
+
+        if (logical !== null && price !== null) {
+          modelLine.points[i].logical = logical as unknown as number; // Store as number
+          modelLine.points[i].price = price;
+
+          // Optional: Update time as well if needed for persistence, though logical is primary now
+          const time = timeScale.coordinateToTime(rp.x);
+          if (time) modelLine.points[i].time = time;
+        }
+      }
+      return;
+    }
+
     const t1 = timeScale.coordinateToTime(renderLine.x1);
     const t2 = timeScale.coordinateToTime(renderLine.x2);
     const p1 = this.series.coordinateToPrice(renderLine.y1);
     const p2 = this.series.coordinateToPrice(renderLine.y2);
 
     if (t1 == null || t2 == null || p1 == null || p2 == null) return;
-
-    const modelLine = this.tools.lines.find((l) => l.id === drag.lineId);
-    if (!modelLine) return;
 
     modelLine.p1.time = t1;
     modelLine.p1.price = p1;
@@ -127,14 +183,36 @@ export class PaneView implements IPrimitivePaneView {
       if (x1 == null || x2 == null || y1 == null || y2 == null) continue;
 
       // Render the main line (interactive)
-      renderLines.push({
+      const renderObj: RenderLine = {
         id: id,
         x1,
         y1,
         x2,
         y2,
         preview: line.preview,
-      });
+      };
+
+      if (line.points) {
+        renderObj.points = line.points
+          .map((p) => {
+            let px = null;
+            if (p.logical !== undefined) {
+              px = timeScale.logicalToCoordinate(
+                p.logical as unknown as Logical
+              );
+            } else {
+              px = timeScale.timeToCoordinate(p.time);
+            }
+
+            const py = this.series.priceToCoordinate(p.price);
+            return px !== null && py !== null
+              ? { x: px as number, y: py as number }
+              : null;
+          })
+          .filter((p): p is { x: number; y: number } => p !== null);
+      }
+
+      renderLines.push(renderObj);
 
       // If it's a Fibonacci tool, render the levels
       if (line.type === "fib") {

@@ -95,6 +95,10 @@ export abstract class PluginBase implements ISeriesPrimitive<Time> {
     </svg>
   </button>
 
+  <button data-tool="pen" class="tool-btn" id="pen-button">
+     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19l7-7 3 3-7 7-3-3z"></path><path d="M18 13l-1.5-7.5L2 2l3.5 14.5L13 18l5-5z"></path><path d="M2 2l7.586 7.586"></path><circle cx="11" cy="11" r="2"></circle></svg>
+  </button>
+
   <button data-tool="remover" class="tool-btn" id="remover-button">
     <svg width="20" height="20" viewBox="0 0 24 24" fill="#2252cc">
       <path d="M3 6H21" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
@@ -192,6 +196,7 @@ export abstract class PluginBase implements ISeriesPrimitive<Time> {
       switch (tool) {
         case "trendline":
         case "fibonacci":
+        case "pen":
           this.setCursor("crosshair");
           break;
         case "remover":
