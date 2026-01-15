@@ -126,6 +126,7 @@ export class PaneView implements IPrimitivePaneView {
 
       if (x1 == null || x2 == null || y1 == null || y2 == null) continue;
 
+      // Render the main line (interactive)
       renderLines.push({
         id: id,
         x1,
@@ -134,6 +135,41 @@ export class PaneView implements IPrimitivePaneView {
         y2,
         preview: line.preview,
       });
+
+      // If it's a Fibonacci tool, render the levels
+      if (line.type === "fib") {
+        const levels = [0, 0.236, 0.382, 0.5, 0.618, 0.786, 1];
+        const colors: Record<number, string> = {
+          0: "#787b86",
+          0.236: "#f23645",
+          0.382: "#ff9800",
+          0.5: "#4caf50",
+          0.618: "#089981",
+          0.786: "#2962ff",
+          1: "#787b86",
+        };
+
+        const priceDiff = line.p2.price - line.p1.price;
+
+        for (const level of levels) {
+          const levelPrice = line.p1.price + priceDiff * level;
+          const levelY = this.series.priceToCoordinate(levelPrice);
+          if (levelY === null) continue;
+
+          renderLines.push({
+            id: `${id}-fib-${level}`, // unique ID for renderer
+            x1,
+            y1: levelY,
+            x2,
+            y2: levelY,
+            preview: line.preview,
+            interaction: false, // Not interactive
+            color: colors[level] || "#787b86",
+            label: `${level} (${levelPrice.toFixed(2)})`,
+            textColor: colors[level] || "#787b86",
+          });
+        }
+      }
     }
 
     this._renderer.update(renderLines);

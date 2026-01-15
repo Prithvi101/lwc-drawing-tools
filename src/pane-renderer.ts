@@ -9,6 +9,10 @@ export type RenderLine = {
   x2: number;
   y2: number;
   preview?: boolean;
+  interaction?: boolean; // default true
+  color?: string;
+  label?: string;
+  textColor?: string;
 };
 
 type DrawTarget = Parameters<IPrimitivePaneRenderer["draw"]>[0];
@@ -50,7 +54,8 @@ export class PaneRenderer {
 
         ctx.save();
 
-        const baseColor = this.options?.color ?? "rgba(32,108,237,1)";
+        const baseColor =
+          l.color ?? this.options?.color ?? "rgba(32,108,237,1)";
 
         const colors = {
           normal: baseColor,
@@ -58,11 +63,15 @@ export class PaneRenderer {
           selected: brighten(baseColor, 40),
         };
 
-        ctx.strokeStyle = isSelected
-          ? colors.selected
-          : isHovered
-          ? colors.hovered
-          : colors.normal;
+        if (l.interaction === false) {
+          ctx.strokeStyle = colors.normal; // plain color for non-interactive
+        } else {
+          ctx.strokeStyle = isSelected
+            ? colors.selected
+            : isHovered
+            ? colors.hovered
+            : colors.normal;
+        }
 
         ctx.lineWidth =
           ((this.options?.lineWidth ?? 1) + (isHovered || isSelected ? 1 : 0)) *
@@ -76,7 +85,7 @@ export class PaneRenderer {
         ctx.stroke();
 
         // 🔑 edges only on hover or selection
-        if (isHovered || isSelected) {
+        if ((isHovered || isSelected) && l.interaction !== false) {
           const r = 4 * v;
           const drawEdge = (x: number, y: number) => {
             ctx.fillStyle = colors.normal;
@@ -91,6 +100,16 @@ export class PaneRenderer {
 
           drawEdge(l.x1, l.y1);
           drawEdge(l.x2, l.y2);
+        }
+
+        // Draw Label if present
+        if (l.label) {
+          ctx.font = `${10 * v}px sans-serif`;
+          ctx.fillStyle = l.textColor ?? l.color ?? baseColor;
+          ctx.textAlign = "left";
+          ctx.textBaseline = "bottom";
+          // Draw slightly above the line, at the start x
+          ctx.fillText(l.label, l.x1 * h + 2 * h, l.y1 * v - 2 * v);
         }
 
         ctx.restore();
@@ -124,6 +143,7 @@ export class PaneRenderer {
   findLineAt(x: number, y: number, tolerance = 6): RenderLine | null {
     for (let i = this.lines.length - 1; i >= 0; i--) {
       const l = this.lines[i];
+      if (l.interaction === false) continue; // skip non-interactive lines
       if (this.distanceToLine(x, y, l.x1, l.y1, l.x2, l.y2) <= tolerance) {
         return l;
       }

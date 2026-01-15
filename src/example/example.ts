@@ -7,7 +7,7 @@ const DEFAULT_OPTIONS: Required<DrawingPluginOptions> = {
   color: "rgba(32, 108, 237, 1)",
   lineWidth: 2,
   showEndpoints: true,
-  toolBoxOffset: { x: 100, y: 10 },
+  toolBoxOffset: { x: 0, y: 10 },
 };
 const chart = ((window as unknown as any).chart = createChart("chart", {
   autoSize: true,

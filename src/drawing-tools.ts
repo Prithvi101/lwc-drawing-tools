@@ -1,13 +1,14 @@
 import { IChartApi, Time } from "lightweight-charts";
 import { nanoid } from "nanoid";
 
-export type ToolType = "move" | "trendline" | "remover";
+export type ToolType = "move" | "trendline" | "fibonacci" | "remover";
 
 export interface Line {
   id: string;
   p1: { time: Time; price: number };
   p2: { time: Time; price: number };
   preview?: boolean;
+  type?: "line" | "fib";
 }
 
 export class DrawingTools {
@@ -30,6 +31,7 @@ export class DrawingTools {
   onClick(time: Time, price: number, chart: IChartApi) {
     switch (this.activeTool) {
       case "trendline":
+      case "fibonacci":
         if (!this.startPoint) {
           this.startPoint = { time, price };
           return;
@@ -39,6 +41,7 @@ export class DrawingTools {
           id: nanoid(),
           p1: this.startPoint,
           p2: { time, price },
+          type: this.activeTool === "fibonacci" ? "fib" : "line",
         });
         // this.setTool("move");
         chart.applyOptions({
@@ -60,6 +63,7 @@ export class DrawingTools {
       p1: this.startPoint,
       p2: { time, price },
       preview: true,
+      type: this.activeTool === "fibonacci" ? "fib" : "line",
     });
   }
 
