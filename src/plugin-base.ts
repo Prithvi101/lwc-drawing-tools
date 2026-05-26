@@ -30,7 +30,7 @@ export abstract class PluginBase implements ISeriesPrimitive<Time> {
     this._series = series;
     this._requestUpdate = requestUpdate;
 
-    this.pane = new PaneView(chart, series, this.tools);
+    this.pane = new PaneView(chart, series, this.tools, requestUpdate);
     this.pane.setOptions(this.options);
     this.mountToolbox();
     this.bindEvents();
@@ -96,6 +96,32 @@ export abstract class PluginBase implements ISeriesPrimitive<Time> {
     </svg>
   </button>
 
+  <button data-tool="rectangle" class="tool-btn" id="rectangle-button" title="Rectangle">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <rect x="3" y="3" width="18" height="18" rx="2" />
+    </svg>
+  </button>
+
+  <button data-tool="text" class="tool-btn" id="text-button" title="Text">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <polyline points="4 7 4 4 20 4 20 7" />
+      <line x1="9" y1="20" x2="15" y2="20" />
+      <line x1="12" y1="4" x2="12" y2="20" />
+    </svg>
+  </button>
+
+  <button data-tool="measure" class="tool-btn" id="measure-button" title="Measure">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M21.3 8.11 15.89 2.7a1 1 0 0 0-1.41 0L2.7 14.48a1 1 0 0 0 0 1.41l5.41 5.41a1 1 0 0 0 1.42 0L21.3 9.52a1 1 0 0 0 0-1.41z" />
+      <path d="m7.5 10.5 1.5-1.5" />
+      <path d="m10.5 13.5 1.5-1.5" />
+      <path d="m13.5 16.5 1.5-1.5" />
+      <path d="m9 7.5 1.5-1.5" />
+      <path d="m12 10.5 1.5-1.5" />
+      <path d="m15 13.5 1.5-1.5" />
+    </svg>
+  </button>
+
   <button data-tool="pen" class="tool-btn" id="pen-button" title="Pen Tool">
      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19l7-7 3 3-7 7-3-3z"></path><path d="M18 13l-1.5-7.5L2 2l3.5 14.5L13 18l5-5z"></path><path d="M2 2l7.586 7.586"></path><circle cx="11" cy="11" r="2"></circle></svg>
   </button>
@@ -130,7 +156,7 @@ export abstract class PluginBase implements ISeriesPrimitive<Time> {
   height: 40px;
 
   border: 1px solid #1e222d;
-  background: #2252cc;
+  background: #090d16;
   border-radius: 10px;
 
   display: flex;
@@ -153,7 +179,7 @@ export abstract class PluginBase implements ISeriesPrimitive<Time> {
 }
 
 .tool-btn.active {
-  background: #1e2a3a;
+  background: #2252cc;
   border-color: #2252cc;
   color: #ffffff;
 
@@ -198,12 +224,16 @@ export abstract class PluginBase implements ISeriesPrimitive<Time> {
         case "trendline":
         case "fibonacci":
         case "pen":
+        case "measure":
+        case "rectangle":
+        case "text":
           this.setCursor("crosshair");
           break;
         case "remover":
           this.setCursor("pointer");
           break;
         default:
+          this.setCursor("default");
           break;
       }
 

@@ -1,15 +1,16 @@
 import { IChartApi, Time } from "lightweight-charts";
 import { nanoid } from "nanoid";
 
-export type ToolType = "move" | "trendline" | "fibonacci" | "pen" | "remover";
+export type ToolType = "move" | "trendline" | "fibonacci" | "pen" | "remover" | "measure" | "rectangle" | "text";
 
 export interface Line {
   id: string;
   p1: { time: Time; price: number };
   p2: { time: Time; price: number };
   preview?: boolean;
-  type?: "line" | "fib" | "pen";
+  type?: "line" | "fib" | "pen" | "measure" | "rectangle" | "text";
   points?: { time: Time; price: number; logical?: number }[];
+  text?: string;
 }
 
 export class DrawingTools {
@@ -36,6 +37,8 @@ export class DrawingTools {
     switch (this.activeTool) {
       case "trendline":
       case "fibonacci":
+      case "measure":
+      case "rectangle":
         if (!this.startPoint) {
           this.startPoint = { time, price };
           return;
@@ -45,7 +48,13 @@ export class DrawingTools {
           id: nanoid(),
           p1: this.startPoint,
           p2: { time, price },
-          type: this.activeTool === "fibonacci" ? "fib" : "line",
+          type: this.activeTool === "fibonacci"
+            ? "fib"
+            : this.activeTool === "measure"
+            ? "measure"
+            : this.activeTool === "rectangle"
+            ? "rectangle"
+            : "line",
         });
         // this.setTool("move");
         chart.applyOptions({
@@ -53,6 +62,9 @@ export class DrawingTools {
           handleScale: true,
         });
         this.startPoint = null;
+        break;
+      case "text":
+        // Handled inline on the chart in PaneView
         break;
       default:
         break;
@@ -68,7 +80,13 @@ export class DrawingTools {
       p1: this.startPoint,
       p2: { time, price },
       preview: true,
-      type: this.activeTool === "fibonacci" ? "fib" : "line",
+      type: this.activeTool === "fibonacci"
+        ? "fib"
+        : this.activeTool === "measure"
+        ? "measure"
+        : this.activeTool === "rectangle"
+        ? "rectangle"
+        : "line",
     });
   }
 

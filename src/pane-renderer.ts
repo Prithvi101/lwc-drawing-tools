@@ -14,6 +14,13 @@ export type RenderLine = {
   label?: string;
   textColor?: string;
   points?: { x: number; y: number }[];
+  type?: "line" | "fib" | "pen" | "measure" | "rectangle" | "text";
+  text?: string;
+  measureLabel?: {
+    priceChange: string;
+    bars: string;
+    duration: string;
+  };
 };
 
 type DrawTarget = Parameters<IPrimitivePaneRenderer["draw"]>[0];
@@ -79,6 +86,163 @@ export class PaneRenderer {
         ctx.lineWidth =
           ((this.options?.lineWidth ?? 1) + (isHovered || isSelected ? 1 : 0)) *
           v;
+
+        if (l.type === "rectangle") {
+          const rx1 = l.x1 * h;
+          const ry1 = l.y1 * v;
+          const rx2 = l.x2 * h;
+          const ry2 = l.y2 * v;
+          const rw = rx2 - rx1;
+          const rh = ry2 - ry1;
+
+          ctx.fillStyle = withAlpha(baseColor, 0.15);
+          ctx.fillRect(rx1, ry1, rw, rh);
+
+          ctx.beginPath();
+          ctx.rect(rx1, ry1, rw, rh);
+          ctx.stroke();
+
+          if ((isHovered || isSelected) && l.interaction !== false) {
+            const r = 4 * v;
+            const drawEdge = (ex: number, ey: number) => {
+              ctx.fillStyle = colors.normal;
+              ctx.beginPath();
+              ctx.arc(ex * h, ey * v, r, 0, Math.PI * 2);
+              ctx.fill();
+              ctx.strokeStyle = colors.normal;
+              ctx.lineWidth = 1 * v;
+              ctx.stroke();
+            };
+            drawEdge(l.x1, l.y1);
+            drawEdge(l.x2, l.y1);
+            drawEdge(l.x2, l.y2);
+            drawEdge(l.x1, l.y2);
+          }
+
+          ctx.restore();
+          continue;
+        }
+
+        if (l.type === "measure") {
+          const rx1 = l.x1 * h;
+          const ry1 = l.y1 * v;
+          const rx2 = l.x2 * h;
+          const ry2 = l.y2 * v;
+          const rw = rx2 - rx1;
+          const rh = ry2 - ry1;
+
+          ctx.fillStyle = withAlpha(baseColor, 0.12);
+          ctx.fillRect(rx1, ry1, rw, rh);
+
+          ctx.strokeStyle = colors.normal;
+          ctx.lineWidth = 1 * v;
+          ctx.setLineDash([4, 4]);
+          ctx.beginPath();
+          ctx.rect(rx1, ry1, rw, rh);
+          ctx.stroke();
+          ctx.setLineDash([]);
+
+          if (l.measureLabel) {
+            const cx = (rx1 + rx2) / 2;
+            const cy = (ry1 + ry2) / 2;
+
+            const paddingX = 10 * h;
+            const paddingY = 8 * v;
+            const fontSize = 11 * v;
+            ctx.font = `500 ${fontSize}px sans-serif`;
+
+            const textLines = [
+              l.measureLabel.priceChange,
+              `${l.measureLabel.bars}, ${l.measureLabel.duration}`
+            ];
+
+            let maxTextWidth = 0;
+            for (const lineText of textLines) {
+              const m = ctx.measureText(lineText).width;
+              if (m > maxTextWidth) maxTextWidth = m;
+            }
+
+            const cardWidth = maxTextWidth + paddingX * 2;
+            const cardHeight = fontSize * 2 + paddingY * 2 + 4 * v;
+
+            const cardX = cx - cardWidth / 2;
+            const cardY = cy - cardHeight / 2;
+
+            ctx.fillStyle = "#1e222d";
+            ctx.strokeStyle = baseColor;
+            ctx.lineWidth = 1 * v;
+
+            ctx.beginPath();
+            const radius = 6 * v;
+            ctx.roundRect(cardX, cardY, cardWidth, cardHeight, radius);
+            ctx.fill();
+            ctx.stroke();
+
+            ctx.fillStyle = "#ffffff";
+            ctx.textAlign = "center";
+            ctx.textBaseline = "middle";
+
+            ctx.fillText(textLines[0], cx, cardY + paddingY + fontSize / 2);
+            ctx.fillText(textLines[1], cx, cardY + paddingY + fontSize * 1.5 + 4 * v);
+          }
+
+          if ((isHovered || isSelected) && l.interaction !== false) {
+            const r = 4 * v;
+            const drawEdge = (ex: number, ey: number) => {
+              ctx.fillStyle = colors.normal;
+              ctx.beginPath();
+              ctx.arc(ex * h, ey * v, r, 0, Math.PI * 2);
+              ctx.fill();
+              ctx.strokeStyle = colors.normal;
+              ctx.lineWidth = 1 * v;
+              ctx.stroke();
+            };
+            drawEdge(l.x1, l.y1);
+            drawEdge(l.x2, l.y2);
+          }
+
+          ctx.restore();
+          continue;
+        }
+
+        if (l.type === "text") {
+          const tx = l.x1 * h;
+          const ty = l.y1 * v;
+          const text = l.text || "";
+
+          const fontSize = 14 * v;
+          ctx.font = `bold ${fontSize}px sans-serif`;
+          ctx.fillStyle = colors.normal;
+          ctx.textAlign = "center";
+          ctx.textBaseline = "bottom";
+
+          const m = ctx.measureText(text);
+          const textWidth = m.width;
+          const textHeight = fontSize;
+          const pad = 6 * v;
+          const gap = 6 * v;
+
+          (l as any).textWidth = textWidth / h;
+          (l as any).textHeight = textHeight / v;
+
+          if ((isHovered || isSelected) && l.interaction !== false) {
+            ctx.strokeStyle = withAlpha(baseColor, 0.4);
+            ctx.lineWidth = 1 * v;
+            ctx.setLineDash([2, 2]);
+            ctx.strokeRect(tx - textWidth / 2 - pad, ty - textHeight - gap - pad, textWidth + pad * 2, textHeight + pad * 2);
+            ctx.setLineDash([]);
+
+            const r = 4 * v;
+            ctx.fillStyle = colors.normal;
+            ctx.beginPath();
+            ctx.arc(l.x1 * h, l.y1 * v, r, 0, Math.PI * 2);
+            ctx.fill();
+          }
+
+          ctx.fillText(text, tx, ty - gap);
+          ctx.restore();
+          continue;
+        }
 
         ctx.setLineDash(l.preview ? [4, 4] : []);
 
@@ -184,7 +348,35 @@ export class PaneRenderer {
       const l = this.lines[i];
       if (l.interaction === false) continue; // skip non-interactive lines
 
-      if (l.points && l.points.length > 0) {
+      if (l.type === "rectangle" || l.type === "measure") {
+        const minX = Math.min(l.x1, l.x2);
+        const maxX = Math.max(l.x1, l.x2);
+        const minY = Math.min(l.y1, l.y2);
+        const maxY = Math.max(l.y1, l.y2);
+        if (x >= minX - tolerance && x <= maxX + tolerance && y >= minY - tolerance && y <= maxY + tolerance) {
+          const distTop = Math.abs(y - l.y1);
+          const distBottom = Math.abs(y - l.y2);
+          const distLeft = Math.abs(x - l.x1);
+          const distRight = Math.abs(x - l.x2);
+          if (
+            distTop <= tolerance ||
+            distBottom <= tolerance ||
+            distLeft <= tolerance ||
+            distRight <= tolerance ||
+            (x > minX && x < maxX && y > minY && y < maxY)
+          ) {
+            return l;
+          }
+        }
+      } else if (l.type === "text") {
+        const width = (l as any).textWidth || 80;
+        const height = (l as any).textHeight || 14;
+        const pad = 6;
+        const gap = 6;
+        if (x >= l.x1 - width / 2 - pad && x <= l.x1 + width / 2 + pad && y >= l.y1 - height - gap - pad && y <= l.y1 - gap + pad) {
+          return l;
+        }
+      } else if (l.points && l.points.length > 0) {
         // Check polyline segments
         for (let j = 0; j < l.points.length - 1; j++) {
           const p1 = l.points[j];
@@ -312,6 +504,10 @@ export class PaneRenderer {
     if (this.dragState.type === "start") {
       line.x1 = x + o.x1;
       line.y1 = y + o.y1;
+      if (line.type === "text") {
+        line.x2 = line.x1;
+        line.y2 = line.y1;
+      }
     }
 
     if (this.dragState.type === "end") {
